@@ -1,0 +1,202 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+
+namespace Drzewa
+{
+    class Program
+    {
+        class graf
+        {
+            private int _v;
+            private int[,] _tab2wym;
+            public int[,] drzewo { get; set; }
+            public int waga { get; set; }
+            public List<int[]> arrayList;
+            public graf(int v)
+            {
+                _v = v;
+                _tab2wym = new int[10,10];
+                arrayList=new List<int[]>();
+                
+               
+                drzewo = new int[10,10];
+                
+                generujmacierz();
+                generujdrzewo();
+            }
+
+            public void generujmacierz()
+            {
+                var a = 0;
+                for (int i = 0; i < _v; i++)
+                {
+                    for (int j = i+1; j < _v ; j++)
+                    {
+                        a = a + 1;
+                        _tab2wym[i,j] = _tab2wym[j,i] = a;
+                    }
+                }
+
+                for (int i = 0; i < _v; i++)
+                {
+                    _tab2wym[i,i] = 0;
+                }
+            }
+            
+            public void generujdrzewo()
+            {
+                int rand1,rand2,rand3;
+                var random=new Random();
+                var r = new int[_v];
+                for (int i = 0; i < _v; i++)
+                {
+                    r[i] = i;
+                }
+                var t = new List<int>();
+                waga = 0;
+                for (int i = 0; i < _v-1; i++)
+                {
+                    int index = 0;
+                    if (i == 0)
+                    {
+                        index = random.Next(r.Length);
+                        rand1 = r[index];
+                        r=r.Where(x=>x!=rand1).ToArray();
+                        t.Add(rand1);
+                        index = random.Next(r.Length);
+                        rand2 = r[index];
+                        r=r.Where(x=>x!=rand2).ToArray();
+                        t.Add(rand2);
+                        drzewo[rand1,rand2] = drzewo[rand2,rand1] = _tab2wym[rand1,rand2];
+                        waga = waga + drzewo[rand2,rand1];
+                        int[] edges = new int[2]{rand1,rand2};
+                        arrayList.Add(edges);
+                    }
+
+                    if (0 < i && i < _v - 2)
+                    {
+                        index = random.Next(t.Count);
+                        rand3 = t[index];
+                        index = random.Next(r.Length);
+                        rand1 = r[index];
+                        r=r.Where(x=>x!=rand1).ToArray();
+                        t.Add(rand1);
+                        drzewo[rand3,rand1] = drzewo[rand1,rand3] = _tab2wym[rand3,rand1];
+                        waga = waga + drzewo[rand1,rand3];
+                        int[] edges = {rand1,rand3};
+                        arrayList.Add(edges);
+                    }
+
+                    if (i == _v - 2)
+                    {
+                        int lr;
+                        index = random.Next(t.Count);
+                        rand3 = t[index];
+                        index = random.Next(r.Length);
+                        lr =  r[index];
+                        r=r.Where(x=>x!=lr).ToArray();
+                        t.Add(lr);
+                        drzewo[rand3,lr] = drzewo[lr,rand3] = _tab2wym[rand3,lr];
+                        waga = waga + drzewo[lr,rand3];
+                        int[] edges = {lr,rand3};
+                        arrayList.Add(edges);
+
+                    }
+                }
+            }
+        }
+
+        class drzewodef
+        {
+            private int _N=100;
+            public List<graf> drzewo { get; set; }
+            public drzewodef()
+            {
+                
+                drzewo = new List<graf>();
+                for (int i = 0; i < _N; i++)
+                {
+                    drzewo.Add(new graf(10));
+                }
+            }
+            public void sort()
+            {
+                var n = 1;
+                while (n != 0)
+                {
+                    n = 0;
+                    
+                    for (int i = 0; i < _N - 1 ; i++) {
+                        if (drzewo[i].waga > drzewo[i + 1].waga)
+                        {
+                            var tmp = drzewo[i];
+                            drzewo[i] = drzewo[i + 1];
+                            drzewo[i + 1] = tmp;
+                            n++;
+                        }
+                    }
+                }
+            }
+
+            public void wypiszwagi()
+            {
+                foreach (var i in drzewo)
+                {
+                    Console.WriteLine(i.waga);
+                }
+                
+            }
+            public void wypiszdrzewaiwagi()
+            {
+                var fileName = @"C:\macierze.txt";
+                using FileStream fs = File.Create(fileName);
+                using var sr = new StreamWriter(fs);
+                foreach (var i in drzewo)
+                {
+                    
+                    for (int j = 0; j < 10; j++)
+                    {
+                        
+                        for (int k = 0; k < 10; k++)
+                        {
+                            Console.Write($"{i.drzewo[j,k]},");
+                            sr.Write($" {i.drzewo[j,k]} ");
+                            
+                        }
+
+                        Console.WriteLine();
+                        sr.WriteLine();
+                    }
+                    
+                    Console.WriteLine();
+                    sr.WriteLine();
+                    for (int c = 0; c < 9; c++)
+                    {
+                        Console.Write($"({string.Join(", ", i.arrayList[c])}) ");
+                        sr.Write($"({string.Join(", ", i.arrayList[c])}) ");
+                    }
+                    Console.WriteLine($"Waga: {i.waga}");
+                    sr.WriteLine($"Waga: {i.waga}");
+                    sr.WriteLine();
+                    Console.WriteLine();
+                    Console.WriteLine();
+                }
+                
+            }
+
+            
+        }
+        
+        static void Main(string[] args)
+        {
+           var drzewa = new drzewodef(); 
+           drzewa.sort();
+           drzewa.wypiszdrzewaiwagi();
+           Console.WriteLine();
+
+        }
+    }
+}
